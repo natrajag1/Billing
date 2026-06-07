@@ -124,7 +124,7 @@ function BillingPage() {
   const [invoiceDate, setInvoiceDate] = useState(todayStr());
   const [transportMode, setTransportMode] = useState("By Road");
   const [vehicleNo, setVehicleNo] = useState("");
-  const [paymentMode, setPaymentMode] = useState("Cash");
+  const [paymentMode, setPaymentMode] = useState("Credit");
 
   const [billedName, setBilledName] = useState("");
   const [billedAddress, setBilledAddress] = useState("");
@@ -161,7 +161,7 @@ function BillingPage() {
   const [purchaseSgst, setPurchaseSgst] = useState<number>(0);
   const [purchaseIgst, setPurchaseIgst] = useState<number>(0);
   const [purchaseRounding, setPurchaseRounding] = useState<number>(0);
-  const [purchasePaymentMode, setPurchasePaymentMode] = useState("Cash");
+  const [purchasePaymentMode, setPurchasePaymentMode] = useState("Credit");
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [showSupplierSuggestions, setShowSupplierSuggestions] = useState(false);
   const [selectedPurchaseDetails, setSelectedPurchaseDetails] = useState<any | null>(null);
@@ -965,7 +965,7 @@ function BillingPage() {
     setPurchaseSupplierAddress("");
     setPurchaseSubtotal("");
     setPurchaseRounding(0);
-    setPurchasePaymentMode("Cash");
+    setPurchasePaymentMode("Credit");
     setPurchaseDate(todayStr());
 
     if (savedOffline) {
@@ -1611,7 +1611,7 @@ function BillingPage() {
                         setPrevRefs([]);
                         setInvoiceDate(todayStr());
                         setIsDateEditable(false);
-                        setPaymentMode("Cash");
+                        setPaymentMode("Credit");
 
                         if (savedOffline) {
                           toast.success(
@@ -1765,8 +1765,8 @@ function BillingPage() {
                             value={paymentMode}
                             onChange={(e) => setPaymentMode(e.target.value)}
                           >
-                            <option value="Cash">Cash</option>
                             <option value="Credit">Credit</option>
+                            <option value="Cash">Cash</option>
                             <option value="Account Transfer">Account Transfer</option>
                             <option value="Cheque">Cheque</option>
                           </select>
@@ -2464,8 +2464,8 @@ function BillingPage() {
                             value={purchasePaymentMode}
                             onChange={(e) => setPurchasePaymentMode(e.target.value)}
                           >
-                            <option value="Cash">Cash</option>
                             <option value="Credit">Credit</option>
+                            <option value="Cash">Cash</option>
                             <option value="Account Transfer">Account Transfer</option>
                             <option value="Cheque">Cheque</option>
                           </select>
