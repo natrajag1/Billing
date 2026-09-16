@@ -83,14 +83,26 @@ async function waitForInvoiceAssets(root: HTMLElement) {
   );
 }
 
+function formatInvoiceNo(currentNo: string): string {
+  if (!currentNo) return "";
+  const match = currentNo.match(/^(.*?)(\d+)$/);
+  if (!match) return currentNo;
+  const prefix = match[1];
+  const numStr = match[2];
+  const padLength = Math.max(numStr.length, 3);
+  return prefix + numStr.padStart(padLength, "0");
+}
+
 function incrementInvoiceNo(currentNo: string): string {
+  if (!currentNo) return "001";
   const match = currentNo.match(/\d+$/);
   if (!match) {
-    return currentNo + "1";
+    return currentNo + "001";
   }
   const numStr = match[0];
   const numVal = parseInt(numStr, 10) + 1;
-  const paddedNum = String(numVal).padStart(numStr.length, "0");
+  const padLength = Math.max(numStr.length, 3);
+  const paddedNum = String(numVal).padStart(padLength, "0");
   return currentNo.substring(0, currentNo.length - numStr.length) + paddedNum;
 }
 
@@ -278,7 +290,7 @@ function BillingPage() {
     if (storedLast) {
       setInvoiceNo(incrementInvoiceNo(storedLast));
     } else {
-      setInvoiceNo("007"); // Default fallback
+      setInvoiceNo("009"); // Default fallback
     }
 
     // Fetch the absolute latest invoice number from Supabase to check cloud state
@@ -1542,8 +1554,11 @@ function BillingPage() {
                           return;
                         }
 
+                        const currentInvoiceNo =
+                          formatInvoiceNo(invoiceNo.trim()) || invoiceNo.trim();
+
                         const billPayload = {
-                          invoice_no: invoiceNo,
+                          invoice_no: currentInvoiceNo,
                           invoice_date: invoiceDate,
                           billed_name: billedName,
                           billed_gstin: billedGstin || null,
@@ -1555,6 +1570,7 @@ function BillingPage() {
                           same_state: sameState,
                           data: {
                             ...JSON.parse(JSON.stringify(data)),
+                            invoiceNo: currentInvoiceNo,
                             billedBy: activeStaff.name,
                           },
                         };
@@ -1595,8 +1611,8 @@ function BillingPage() {
                           stateCode: billedState,
                         });
 
-                        const nextNo = incrementInvoiceNo(invoiceNo);
-                        localStorage.setItem("ag_traders_last_invoice_no", invoiceNo); // Save current as last saved
+                        const nextNo = incrementInvoiceNo(currentInvoiceNo);
+                        localStorage.setItem("ag_traders_last_invoice_no", currentInvoiceNo); // Save current as last saved
                         setInvoiceNo(nextNo);
                         setBilledName("");
                         setBilledAddress("");
@@ -1705,6 +1721,12 @@ function BillingPage() {
                             className="mt-1"
                             value={invoiceNo}
                             onChange={(e) => setInvoiceNo(e.target.value)}
+                            onBlur={(e) => {
+                              const trimmed = e.target.value.trim();
+                              if (trimmed) {
+                                setInvoiceNo(formatInvoiceNo(trimmed));
+                              }
+                            }}
                           />
                         </div>
                         <div>
