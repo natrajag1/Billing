@@ -250,12 +250,50 @@ function BillingPage() {
   }, [previewContainerRef]);
 
   // Load Customers
-  const loadCustomers = () => {
+  const loadCustomers = async () => {
     const stored = localStorage.getItem("ag_traders_customers");
     if (stored) {
       try {
-        setCustomers(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCustomers(parsed);
+          return;
+        }
       } catch (e) {}
+    }
+
+    // Auto-populate past customers from Supabase bills so old customer data is never lost
+    try {
+      const { data: billsData } = await supabase
+        .from("bills")
+        .select("billed_name, billed_gstin, data")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (billsData && billsData.length > 0) {
+        const map = new Map<string, any>();
+        billsData.forEach((b: any) => {
+          const name = b.billed_name?.trim();
+          if (name && !map.has(name.toLowerCase())) {
+            const d = (b.data as any) || {};
+            const bt = d.billedTo || {};
+            map.set(name.toLowerCase(), {
+              name,
+              address: bt.address || "",
+              gstin: b.billed_gstin || bt.gstin || "",
+              stateName: bt.stateName || "Tamil Nadu",
+              stateCode: bt.stateCode || "33",
+            });
+          }
+        });
+        const extracted = Array.from(map.values()).slice(0, 50);
+        if (extracted.length > 0) {
+          setCustomers(extracted);
+          localStorage.setItem("ag_traders_customers", JSON.stringify(extracted));
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load past customers from DB:", e);
     }
   };
 
@@ -284,6 +322,7 @@ function BillingPage() {
     loadSuppliers();
     loadCustomProducts();
     loadStaffList();
+    fetchHistory(); // Pre-load bills history so old data count and history are immediately available
 
     // Load last invoice number from localStorage instantly
     const storedLast = localStorage.getItem("ag_traders_last_invoice_no");
